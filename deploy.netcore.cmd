@@ -58,29 +58,35 @@ IF DEFINED CLEAN_LOCAL_DEPLOYMENT_TEMP (
 )
 
 IF DEFINED MSBUILD_PATH goto MsbuildPathDefined
-SET MSBUILD_PATH=%ProgramFiles(x86)%\MSBuild\15.0\Bin\MSBuild.exe
+SET MSBUILD_PATH=%ProgramFiles(x86)%\MSBuild\14.0\Bin\MSBuild.exe
 :MsbuildPathDefined
+
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Deployment
 :: ----------
 
-echo Handling ASP.NET Core Web Application deployment with MSBuild.
+echo Handling .NET Web Application deployment.
 
-:: 1. Restore nuget packages
-call :ExecuteCmd nuget.exe restore -packagesavemode nuspec "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1.sln"
+:: 1. Restore NuGet packages
+IF /I "NetCoreWeb\CoreWeb1.sln" NEQ "" (
+  call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1.sln"
+  IF !ERRORLEVEL! NEQ 0 goto error
+)
+
+:: 2. Build to the temporary path
+IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
+  call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1\CoreWeb1.csproj" /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="%DEPLOYMENT_TEMP%";AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\NetCoreWeb\\" %SCM_BUILD_ARGS%
+) ELSE (
+  call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1\CoreWeb1.csproj" /nologo /verbosity:m /t:Build /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\NetCoreWeb\\" %SCM_BUILD_ARGS%
+)
+
 IF !ERRORLEVEL! NEQ 0 goto error
 
-:: 2. Build
-call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1.sln" /nologo /verbosity:m /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false %SCM_BUILD_ARGS%
-IF !ERRORLEVEL! NEQ 0 goto error
-
-:: 3. Publish
-call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1\CoreWeb1.xproj" /nologo /verbosity:m /t:GatherAllFilesToPublish /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false;PublishOutputPathNoTrailingSlash="%DEPLOYMENT_TEMP%" %SCM_BUILD_ARGS%
-IF !ERRORLEVEL! NEQ 0 goto error
-
-:: 4. KuduSync
-call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.netcore.cmd"
-IF !ERRORLEVEL! NEQ 0 goto error
+:: 3. KuduSync
+IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
+  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
+  IF !ERRORLEVEL! NEQ 0 goto error
+)
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end
