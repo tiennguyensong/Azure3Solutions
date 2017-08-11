@@ -81,6 +81,13 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
 )
 
 
+:: 1. Restore NuGet packages
+IF /I "NetWeb\Web1.sln" NEQ "" (
+  call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\NetWeb\Web1.sln"
+  IF !ERRORLEVEL! NEQ 0 goto error
+)
+
+
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end
