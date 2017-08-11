@@ -1,0 +1,2 @@
+[config]
+command = deploy.netcore.cmd
