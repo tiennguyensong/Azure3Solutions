@@ -58,7 +58,7 @@ IF DEFINED CLEAN_LOCAL_DEPLOYMENT_TEMP (
 )
 
 IF DEFINED MSBUILD_PATH goto MsbuildPathDefined
-SET MSBUILD_PATH=%ProgramFiles(x86)%\MSBuild\14.0\Bin\MSBuild.exe
+SET MSBUILD_PATH=%ProgramFiles(x86)%\MSBuild\15.0\Bin\MSBuild.exe
 :MsbuildPathDefined
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Deployment
@@ -79,7 +79,7 @@ call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetCoreWeb\CoreWeb1\CoreW
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 4. KuduSync
-call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
+call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.netcore.cmd"
 IF !ERRORLEVEL! NEQ 0 goto error
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
