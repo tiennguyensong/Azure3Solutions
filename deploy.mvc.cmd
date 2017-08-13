@@ -91,9 +91,13 @@ IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
 
 :: 4. Running Gulp
 echo Running Gulp: Starting %TIME%
-call :ExecuteCmd "gulp"
-echo Running Gulp: Finished %TIME%
-IF !ERRORLEVEL! NEQ 0 goto error
+IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
+  pushd "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1"
+  call :ExecuteCmd "gulp"
+  IF !ERRORLEVEL! NEQ 0 goto error
+  popd
+)
+
 
 :: 5. Restore NuGet packages
 IF /I "NetWeb\Web1.sln" NEQ "" (
