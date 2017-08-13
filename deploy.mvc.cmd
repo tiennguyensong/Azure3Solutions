@@ -80,11 +80,14 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\core\CoreProject\CoreProject.csproj" /nologo /verbosity:m /t:Build /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\core\CoreProject\\" %SCM_BUILD_ARGS%
 )
 
-:: 3. Npm install
-echo Installing npm packages: Starting %TIME%
-call :ExecuteCmd npm install
-echo Installing npm packages: Finished %TIME%
-IF !ERRORLEVEL! NEQ 0 goto error
+
+:: 3. Install npm packages
+IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
+  pushd "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1"
+  call :ExecuteCmd !NPM_CMD! install
+  IF !ERRORLEVEL! NEQ 0 goto error
+  popd
+)
 
 :: 4. Running Gulp
 echo Running Gulp: Starting %TIME%
