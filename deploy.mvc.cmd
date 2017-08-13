@@ -80,18 +80,25 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\core\CoreProject\CoreProject.csproj" /nologo /verbosity:m /t:Build /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\core\CoreProject\\" %SCM_BUILD_ARGS%
 )
 
-:: 3. Running Gulp
+:: 3. Npm install
+echo Installing npm packages: Starting %TIME%
+call :ExecuteCmd npm install
+echo Installing npm packages: Finished %TIME%
+IF !ERRORLEVEL! NEQ 0 goto error
+
+:: 4. Running Gulp
 echo Running Gulp: Starting %TIME%
 call :ExecuteCmd "gulp"
 echo Running Gulp: Finished %TIME%
+IF !ERRORLEVEL! NEQ 0 goto error
 
-:: 4. Restore NuGet packages
+:: 5. Restore NuGet packages
 IF /I "NetWeb\Web1.sln" NEQ "" (
   call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\NetWeb\Web1.sln"
   IF !ERRORLEVEL! NEQ 0 goto error
 )
 
-:: 5. Build to the temporary path
+:: 6. Build to the temporary path
 IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\Web1.csproj" /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="%DEPLOYMENT_TEMP%";AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\NetWeb\\" %SCM_BUILD_ARGS%
 ) ELSE (
@@ -100,7 +107,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
 
 IF !ERRORLEVEL! NEQ 0 goto error
 
-:: 6. KuduSync
+:: 7. KuduSync
 IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
   IF !ERRORLEVEL! NEQ 0 goto error
