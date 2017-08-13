@@ -84,7 +84,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
 :: 3. Install npm packages
 IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
   pushd "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1"
-  call :ExecuteCmd !NPM_CMD! install
+  call :ExecuteCmd npm install
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
