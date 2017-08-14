@@ -80,7 +80,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   call :ExecuteCmd "%MSBUILD_PATH%" "%DEPLOYMENT_SOURCE%\core\CoreProject\CoreProject.csproj" /nologo /verbosity:m /t:Build /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\core\CoreProject\\" %SCM_BUILD_ARGS%
 )
 
-
+echo Restoring npm packages: Starting %TIME%
 :: 3. Install npm packages
 IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
   pushd "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1"
@@ -88,6 +88,7 @@ IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
+echo Finished restoring npm packages: %TIME%
 
 :: 4. Running Gulp
 echo Running Gulp: Starting %TIME%
@@ -97,7 +98,7 @@ IF EXIST "%DEPLOYMENT_SOURCE%\NetWeb\WebRole1\package.json" (
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
-
+echo Finished running Gulp: %TIME%
 
 :: 5. Restore NuGet packages
 IF /I "NetWeb\Web1.sln" NEQ "" (
